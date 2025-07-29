@@ -7,8 +7,7 @@
 
 use crate::{
     constants::{
-        self, AES_KEY_LEN, BUFFER_LEN, CUSTOM_FILE_EXTENSION, IV_LEN, MASTER_KEY_LEN, SALT_LEN,
-        TAG_LEN,
+        AES_KEY_LEN, BUFFER_LEN, CUSTOM_FILE_EXTENSION, IV_LEN, MASTER_KEY_LEN, SALT_LEN,
     },
     keyfile::{combine_password_and_keyfile, KeyFile},
     Level,

@@ -29,7 +29,7 @@ fn test_encryption_decryption_roundtrip() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        Arc::clone(&temp_file_path),
+        None, Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test.txt.feroxcrypt");
@@ -39,7 +39,7 @@ fn test_encryption_decryption_roundtrip() -> Result<()> {
     fs::remove_file(&original_file)?;
 
     // Test decryption
-    run_decryption_flow(&encrypted_file, password, Arc::clone(&temp_file_path))?;
+    run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path))?;
 
     // Verify decrypted content
     let decrypted_content = fs::read(&original_file)?;
@@ -69,7 +69,7 @@ fn test_different_security_levels() -> Result<()> {
             false,
             password,
             level,
-            Arc::clone(&temp_file_path),
+            None, Arc::clone(&temp_file_path),
         )?;
 
         let encrypted_file = temp_dir.path().join(format!("{}.feroxcrypt", filename));
@@ -81,7 +81,7 @@ fn test_different_security_levels() -> Result<()> {
 
         // Remove original and decrypt
         fs::remove_file(&original_file)?;
-        run_decryption_flow(&encrypted_file, password, Arc::clone(&temp_file_path))?;
+        run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path))?;
 
         // Verify content
         let decrypted_content = fs::read(&original_file)?;
@@ -112,7 +112,7 @@ fn test_large_file_encryption() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        Arc::clone(&temp_file_path),
+        None, Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("large_test.bin.feroxcrypt");
@@ -124,7 +124,7 @@ fn test_large_file_encryption() -> Result<()> {
 
     // Decrypt
     fs::remove_file(&original_file)?;
-    run_decryption_flow(&encrypted_file, password, Arc::clone(&temp_file_path))?;
+    run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path))?;
 
     // Verify content
     let decrypted_content = fs::read(&original_file)?;
@@ -149,7 +149,7 @@ fn test_unicode_filename() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        Arc::clone(&temp_file_path),
+        None, Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir
@@ -159,7 +159,7 @@ fn test_unicode_filename() -> Result<()> {
 
     // Decrypt
     fs::remove_file(&original_file)?;
-    run_decryption_flow(&encrypted_file, password, Arc::clone(&temp_file_path))?;
+    run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path))?;
 
     // Verify
     let decrypted_content = fs::read(&original_file)?;

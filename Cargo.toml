@@ -41,6 +41,12 @@ indicatif = "0.17.8"
 # 新增信号处理库
 ctrlc = "3.4.4"
 
+# 文件模式匹配
+glob = "0.3.1"
+
+# 目录遍历
+walkdir = "1.0.7"
+
 [dev-dependencies]
 # 用于在测试中创建临时文件和目录
 tempfile = "3.10.1"

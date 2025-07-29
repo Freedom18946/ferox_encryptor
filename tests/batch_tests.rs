@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use ferox_encryptor::{batch_decrypt_directory, batch_encrypt_directory, BatchConfig, Level};
+use glob::Pattern;
 use std::fs;
 use tempfile::TempDir;
 
@@ -27,7 +28,7 @@ fn test_batch_encrypt_decrypt_basic() -> Result<()> {
     let config = BatchConfig::default();
 
     // Test batch encryption
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, &config)?;
+    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(encrypt_result.success_count, 3);
     assert_eq!(encrypt_result.failure_count, 0);
 
@@ -44,7 +45,7 @@ fn test_batch_encrypt_decrypt_basic() -> Result<()> {
     }
 
     // Test batch decryption
-    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, &config)?;
+    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(decrypt_result.success_count, 3);
     assert_eq!(decrypt_result.failure_count, 0);
 
@@ -88,7 +89,7 @@ fn test_batch_with_subdirectories() -> Result<()> {
         ..Default::default()
     };
 
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, &recursive_config)?;
+    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &recursive_config)?;
     assert_eq!(encrypt_result.success_count, 3);
     assert_eq!(encrypt_result.failure_count, 0);
 
@@ -99,7 +100,7 @@ fn test_batch_with_subdirectories() -> Result<()> {
     }
 
     // Test recursive decryption
-    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, &recursive_config)?;
+    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, None, &recursive_config)?;
     assert_eq!(decrypt_result.success_count, 3);
     assert_eq!(decrypt_result.failure_count, 0);
 
@@ -135,11 +136,11 @@ fn test_batch_with_file_patterns() -> Result<()> {
 
     // Test with include pattern for only .txt files
     let txt_config = BatchConfig {
-        include_patterns: vec!["*.txt".to_string()],
+        include_patterns: vec![Pattern::new("*.txt")?],
         ..Default::default()
     };
 
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, &txt_config)?;
+    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &txt_config)?;
     assert_eq!(encrypt_result.success_count, 2); // Only 2 .txt files
 
     // Verify only .txt files were encrypted
@@ -173,11 +174,11 @@ fn test_batch_with_exclude_patterns() -> Result<()> {
 
     // Test with exclude patterns for temporary and backup files
     let exclude_config = BatchConfig {
-        exclude_patterns: vec!["*.tmp".to_string(), "*.bak".to_string()],
+        exclude_patterns: vec![Pattern::new("*.tmp")?, Pattern::new("*.bak")?],
         ..Default::default()
     };
 
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, &exclude_config)?;
+    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &exclude_config)?;
     assert_eq!(encrypt_result.success_count, 2); // Only keep1.txt and keep2.doc
 
     // Verify correct files were encrypted
@@ -202,14 +203,14 @@ fn test_batch_force_overwrite() -> Result<()> {
     let config = BatchConfig::default();
 
     // First encryption
-    let encrypt_result1 = batch_encrypt_directory(temp_dir.path(), password, &config)?;
+    let encrypt_result1 = batch_encrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(encrypt_result1.success_count, 1);
 
     // Modify original file
     fs::write(&test_file, b"Modified content")?;
 
     // Try to encrypt again without force - should fail
-    let encrypt_result2 = batch_encrypt_directory(temp_dir.path(), password, &config)?;
+    let encrypt_result2 = batch_encrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(encrypt_result2.failure_count, 1);
 
     // Try with force overwrite - should succeed
@@ -218,7 +219,7 @@ fn test_batch_force_overwrite() -> Result<()> {
         ..Default::default()
     };
 
-    let encrypt_result3 = batch_encrypt_directory(temp_dir.path(), password, &force_config)?;
+    let encrypt_result3 = batch_encrypt_directory(temp_dir.path(), password, None, &force_config)?;
     assert_eq!(encrypt_result3.success_count, 1);
 
     Ok(())
@@ -243,7 +244,7 @@ fn test_batch_different_security_levels() -> Result<()> {
         };
 
         // Encrypt with specific level
-        let encrypt_result = batch_encrypt_directory(&level_dir, password, &config)?;
+        let encrypt_result = batch_encrypt_directory(&level_dir, password, None, &config)?;
         assert_eq!(encrypt_result.success_count, 1);
 
         // Verify encrypted file exists
@@ -252,7 +253,7 @@ fn test_batch_different_security_levels() -> Result<()> {
 
         // Decrypt and verify
         fs::remove_file(&test_file)?;
-        let decrypt_result = batch_decrypt_directory(&level_dir, password, &config)?;
+        let decrypt_result = batch_decrypt_directory(&level_dir, password, None, &config)?;
         assert_eq!(decrypt_result.success_count, 1);
 
         let decrypted_content = fs::read_to_string(&test_file)?;
@@ -277,7 +278,7 @@ fn test_batch_error_handling() -> Result<()> {
     let config = BatchConfig::default();
 
     // Batch encrypt - should process valid files and skip encrypted one
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, &config)?;
+    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(encrypt_result.success_count, 2); // Only valid1.txt and valid2.txt
     assert_eq!(encrypt_result.failure_count, 0); // .feroxcrypt files are filtered out, not failed
 
@@ -292,11 +293,11 @@ fn test_batch_empty_directory() -> Result<()> {
     let config = BatchConfig::default();
 
     // Test batch operations on empty directory
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, &config)?;
+    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(encrypt_result.success_count, 0);
     assert_eq!(encrypt_result.failure_count, 0);
 
-    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, &config)?;
+    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, None, &config)?;
     assert_eq!(decrypt_result.success_count, 0);
     assert_eq!(decrypt_result.failure_count, 0);
 

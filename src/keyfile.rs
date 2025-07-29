@@ -92,10 +92,9 @@ impl KeyFile {
     ///
     /// 密钥文件数据的 SHA-256 哈希值。
     pub fn hash(&self) -> [u8; 32] {
-        let mut hasher = argon2::hash_raw(&self.data, KEYFILE_DERIVATION_SALT, &argon2_config()).unwrap();
-        let hash_copy = hasher[..32].try_into().expect("hash is 32 bytes");
-        hasher.zeroize();
-        hash_copy
+        let mut output = [0u8; KEYFILE_DERIVED_LEN];
+        argon2_config().hash_password_into(&self.data, KEYFILE_DERIVATION_SALT, &mut output).unwrap();
+        output
     }
 }
 
@@ -127,11 +126,12 @@ pub fn combine_password_and_keyfile(
     let keyfile_hash = keyfile.hash();
 
     // 使用 Argon2 将密码和密钥文件的哈希值结合起来
-    let combined_hash = argon2::hash_raw(
+    let mut combined_hash = vec![0u8; KEYFILE_DERIVED_LEN];
+    argon2_config().hash_password_into(
         password.as_bytes(),
         &keyfile_hash, // 使用密钥文件的哈希作为盐
-        &argon2_config(),
-    )?;
+        &mut combined_hash,
+    ).map_err(|e| anyhow::anyhow!("Argon2 error: {}", e))?;
 
     Ok(combined_hash)
 }

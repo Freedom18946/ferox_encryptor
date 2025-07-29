@@ -33,7 +33,7 @@ fn test_large_file_performance() -> Result<()> {
         false,
         password,
         Level::Interactive, // Use fastest level for performance test
-        Arc::clone(&temp_file_path),
+        None, Arc::clone(&temp_file_path),
     )?;
     let encrypt_duration = encrypt_start.elapsed();
 
@@ -48,7 +48,7 @@ fn test_large_file_performance() -> Result<()> {
     // Test decryption performance
     fs::remove_file(&test_file)?;
     let decrypt_start = Instant::now();
-    run_decryption_flow(&encrypted_file, password, temp_file_path)?;
+    run_decryption_flow(&encrypted_file, password, None, temp_file_path)?;
     let decrypt_duration = decrypt_start.elapsed();
 
     // Calculate decryption throughput
@@ -95,7 +95,7 @@ fn test_security_level_performance_comparison() -> Result<()> {
             false,
             password,
             level,
-            Arc::clone(&temp_file_path),
+            None, Arc::clone(&temp_file_path),
         )?;
         let encrypt_duration = encrypt_start.elapsed();
 
@@ -104,7 +104,7 @@ fn test_security_level_performance_comparison() -> Result<()> {
         // Measure decryption time
         fs::remove_file(&test_file)?;
         let decrypt_start = Instant::now();
-        run_decryption_flow(&encrypted_file, password, temp_file_path)?;
+        run_decryption_flow(&encrypted_file, password, None, temp_file_path)?;
         let decrypt_duration = decrypt_start.elapsed();
 
         // Verify integrity
@@ -162,7 +162,7 @@ fn test_memory_usage_with_large_file() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        Arc::clone(&temp_file_path),
+        None, Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("memory_test.bin.feroxcrypt");
@@ -170,7 +170,7 @@ fn test_memory_usage_with_large_file() -> Result<()> {
 
     // Decrypt large file
     fs::remove_file(&test_file)?;
-    run_decryption_flow(&encrypted_file, password, temp_file_path)?;
+    run_decryption_flow(&encrypted_file, password, None, temp_file_path)?;
 
     // Verify content integrity
     let decrypted_content = fs::read(&test_file)?;
@@ -220,7 +220,7 @@ fn test_many_small_files_performance() -> Result<()> {
             false,
             password,
             Level::Interactive,
-            Arc::clone(&temp_file_path),
+            None, Arc::clone(&temp_file_path),
         )?;
     }
     let encrypt_duration = encrypt_start.elapsed();
@@ -233,7 +233,7 @@ fn test_many_small_files_performance() -> Result<()> {
     let decrypt_start = Instant::now();
     for test_file in &test_files {
         let encrypted_file = temp_dir.path().join(format!("{}.feroxcrypt", test_file.file_name().unwrap().to_str().unwrap()));
-        run_decryption_flow(&encrypted_file, password, Arc::clone(&temp_file_path))?;
+        run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path))?;
     }
     let decrypt_duration = decrypt_start.elapsed();
 

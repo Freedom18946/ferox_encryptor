@@ -11,7 +11,7 @@ use crate::{
     keyfile::KeyFile,
     Level,
 };
-use anyhow::{Context, Result};
+use anyhow::Result;
 use glob::Pattern;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -263,7 +263,7 @@ fn collect_files(
         .into_iter()
         .filter_map(Result::ok) // 忽略读取目录中的错误
         .filter(|e| e.file_type().is_file()) // 只关心文件
-        .map(|e| e.into_path())
+        .map(|e| e.path().to_path_buf())
         .filter(|path| should_include_file(path, config, encrypted_only)) // 应用过滤规则
         .collect();
 

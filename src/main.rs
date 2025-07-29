@@ -17,8 +17,6 @@ use ferox_encryptor::{
         batch_decrypt_directory, batch_decrypt_files, batch_encrypt_directory, batch_encrypt_files,
         BatchConfig,
     },
-    decrypt::run_decryption_flow,
-    encrypt::run_encryption_flow,
     keyfile::{validate_keyfile, KeyFile},
     Level,
 };
@@ -160,7 +158,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // 使用 match 语句处理不同的子命令
-    let result = match &cli.command {
+    match &cli.command {
         // --- 加密命令 ---
         Commands::Encrypt { paths, force, level, keyfile } => {
             let mut password = rpassword::prompt_password("请输入密码 (输入时不可见): ")
@@ -178,7 +176,6 @@ fn main() -> Result<()> {
             print_batch_result(&result, "加密");
             
             password.zeroize();
-            Ok(())
         }
         // --- 解密命令 ---
         Commands::Decrypt { paths, keyfile } => {
@@ -191,7 +188,6 @@ fn main() -> Result<()> {
             print_batch_result(&result, "解密");
 
             password.zeroize();
-            Ok(())
         }
         // --- 批量加密命令 ---
         Commands::BatchEncrypt { directory, force, level, recursive, include_patterns, exclude_patterns, keyfile } => {
@@ -212,7 +208,6 @@ fn main() -> Result<()> {
             print_batch_result(&result, "批量加密");
 
             password.zeroize();
-            Ok(())
         }
         // --- 批量解密命令 ---
         Commands::BatchDecrypt { directory, recursive, keyfile } => {
@@ -230,7 +225,6 @@ fn main() -> Result<()> {
             print_batch_result(&result, "批量解密");
 
             password.zeroize();
-            Ok(())
         }
         // --- 生成密钥文件命令 ---
         Commands::GenerateKey { output } => {
@@ -247,16 +241,8 @@ fn main() -> Result<()> {
             keyfile.save_to_file(output)?;
             log::info!("✅ 密钥文件已成功生成: {}", output.display());
             log::warn!("请务必妥善保管此密钥文件，并制作备份。如果丢失，任何使用此密钥文件加密的数据都将永久无法恢复！");
-            
-            Ok(())
         }
     };
-
-    // 统一处理所有命令可能返回的错误
-    if let Err(e) = result {
-        log::error!("操作失败: {e:#}");
-        std::process::exit(1);
-    }
 
     Ok(())
 }

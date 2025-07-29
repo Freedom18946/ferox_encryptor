@@ -68,6 +68,8 @@ pub use batch::{
     batch_decrypt_directory, batch_decrypt_files, batch_encrypt_directory, batch_encrypt_files,
     BatchConfig, BatchResult,
 };
+pub use decrypt::run_decryption_flow;
+pub use encrypt::run_encryption_flow;
 pub use keyfile::{validate_keyfile, KeyFile};
 
 /// # 安全级别
@@ -113,7 +115,6 @@ mod tests {
     use super::{decrypt, encrypt, keyfile::KeyFile, Level};
     use anyhow::Result;
     use std::fs;
-    use std::path::Path;
     use std::sync::{Arc, Mutex};
     use tempfile::TempDir;
 
