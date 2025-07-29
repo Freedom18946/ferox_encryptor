@@ -1,0 +1,46 @@
+[package]
+name = "ferox_encryptor"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+# 核心加密库 - AES in CTR mode
+aes = "0.8.4"
+ctr = "0.9.2"
+
+# 消息认证码
+hmac = "0.12.1"
+sha2 = "0.10.8"
+
+# 核心密钥派生库
+argon2 = { version = "0.5.3", features = ["zeroize"] }
+
+# 安全随机数生成
+rand = "0.8.5"
+
+# 安全读取密码
+rpassword = "7.3"
+
+# 优雅的错误处理
+anyhow = "1.0.86"
+
+# 日志记录
+log = "0.4.21"
+env_logger = "0.11.3"
+
+# 安全擦除内存
+zeroize = "1.8.1"
+
+# 新增CLI参数解析库
+clap = { version = "4.5.8", features = ["derive"] }
+
+# 新增进度条库
+indicatif = "0.17.8"
+
+# 新增信号处理库
+ctrlc = "3.4.4"
+
+[dev-dependencies]
+# 用于在测试中创建临时文件和目录
+tempfile = "3.10.1"
