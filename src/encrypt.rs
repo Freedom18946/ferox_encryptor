@@ -6,9 +6,7 @@
 //! 密钥派生、文件读写到生成最终加密文件的完整逻辑。
 
 use crate::{
-    constants::{
-        AES_KEY_LEN, BUFFER_LEN, CUSTOM_FILE_EXTENSION, IV_LEN, MASTER_KEY_LEN, SALT_LEN,
-    },
+    constants::{AES_KEY_LEN, BUFFER_LEN, CUSTOM_FILE_EXTENSION, IV_LEN, MASTER_KEY_LEN, SALT_LEN},
     keyfile::{combine_password_and_keyfile, KeyFile},
     Level,
 };
@@ -80,11 +78,7 @@ pub fn run_encryption_flow(
             .context("文件名包含无效的UTF-8字符")?;
 
         // 构建目标加密文件的路径
-        let target_path_str = format!(
-            "{}.{}",
-            source_path.display(),
-            CUSTOM_FILE_EXTENSION
-        );
+        let target_path_str = format!("{}.{}", source_path.display(), CUSTOM_FILE_EXTENSION);
         let target_path = Path::new(&target_path_str).to_path_buf();
 
         // 如果目标文件已存在且未设置强制覆盖，则报错
@@ -96,7 +90,7 @@ pub fn run_encryption_flow(
         }
 
         log::info!("加密后的文件将保存为: {}", target_path.display());
-        log::info!("使用 {:?} 安全级别进行加密", level);
+        log::info!("使用 {level:?} 安全级别进行加密");
 
         // 在开始写入前，将目标路径存入共享状态，以便中断时可以清理
         *temp_file_path.lock().unwrap() = Some(target_path.clone());
@@ -140,7 +134,7 @@ pub fn run_encryption_flow(
         argon2
             .hash_password_into(&password_material, &salt, &mut master_key)
             .map_err(|e| anyhow!("Argon2密钥派生失败: {}", e))?;
-        
+
         // 安全地擦除内存中的密码材料
         password_material.zeroize();
         log::info!("密钥派生完成。");
@@ -149,8 +143,7 @@ pub fn run_encryption_flow(
         // 主密钥的前半部分用于 AES 加密，后半部分用于 HMAC 认证
         let (aes_key, hmac_key) = master_key.split_at(AES_KEY_LEN);
         let mut cipher = Aes256Ctr::new(aes_key.into(), &iv.into());
-        let mut mac =
-            HmacSha256::new_from_slice(hmac_key).context("无法创建HMAC实例")?;
+        let mut mac = HmacSha256::new_from_slice(hmac_key).context("无法创建HMAC实例")?;
 
         // --- 7. 写入文件头 ---
         // 文件头包含了恢复原始文件名和进行解密所需的所有元数据。
@@ -189,7 +182,7 @@ pub fn run_encryption_flow(
             }
             pb.inc(bytes_read as u64);
             let chunk = &mut buffer[..bytes_read];
-            
+
             // Encrypt-then-MAC 模式:
             // 1. 加密数据块
             cipher.apply_keystream(chunk);

@@ -7,7 +7,7 @@
 //! 提供双重保护。即使密码泄露，没有对应的密钥文件，数据也无法被解密。
 
 use crate::constants::{
-    KEYFILE_DERIVED_LEN, KEYFILE_DERIVATION_SALT, MAX_KEYFILE_SIZE, MIN_KEYFILE_SIZE,
+    KEYFILE_DERIVATION_SALT, KEYFILE_DERIVED_LEN, MAX_KEYFILE_SIZE, MIN_KEYFILE_SIZE,
 };
 use anyhow::{bail, Context, Result};
 use argon2::{self, Argon2};
@@ -52,8 +52,8 @@ impl KeyFile {
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
         // 读取文件内容
-        let data = fs::read(path)
-            .with_context(|| format!("无法读取密钥文件: {}", path.display()))?;
+        let data =
+            fs::read(path).with_context(|| format!("无法读取密钥文件: {}", path.display()))?;
 
         // 验证文件大小是否在允许范围内
         if data.len() < MIN_KEYFILE_SIZE || data.len() > MAX_KEYFILE_SIZE {
@@ -81,7 +81,7 @@ impl KeyFile {
         let path = path.as_ref();
         fs::write(path, &self.data)
             .with_context(|| format!("无法写入密钥文件: {}", path.display()))?;
-        
+
         log::info!("密钥文件已保存: {}", path.display());
         Ok(())
     }
@@ -93,7 +93,9 @@ impl KeyFile {
     /// 密钥文件数据的 SHA-256 哈希值。
     pub fn hash(&self) -> [u8; 32] {
         let mut output = [0u8; KEYFILE_DERIVED_LEN];
-        argon2_config().hash_password_into(&self.data, KEYFILE_DERIVATION_SALT, &mut output).unwrap();
+        argon2_config()
+            .hash_password_into(&self.data, KEYFILE_DERIVATION_SALT, &mut output)
+            .unwrap();
         output
     }
 }
@@ -118,20 +120,19 @@ impl Drop for KeyFile {
 /// # 返回
 ///
 /// 结合了密码和密钥文件信息的字节向量，将用作 Argon2 的输入。
-pub fn combine_password_and_keyfile(
-    password: &str,
-    keyfile: &KeyFile,
-) -> Result<Vec<u8>> {
+pub fn combine_password_and_keyfile(password: &str, keyfile: &KeyFile) -> Result<Vec<u8>> {
     // 使用 Argon2 从密钥文件内容派生出一个哈希值
     let keyfile_hash = keyfile.hash();
 
     // 使用 Argon2 将密码和密钥文件的哈希值结合起来
     let mut combined_hash = vec![0u8; KEYFILE_DERIVED_LEN];
-    argon2_config().hash_password_into(
-        password.as_bytes(),
-        &keyfile_hash, // 使用密钥文件的哈希作为盐
-        &mut combined_hash,
-    ).map_err(|e| anyhow::anyhow!("Argon2 error: {}", e))?;
+    argon2_config()
+        .hash_password_into(
+            password.as_bytes(),
+            &keyfile_hash, // 使用密钥文件的哈希作为盐
+            &mut combined_hash,
+        )
+        .map_err(|e| anyhow::anyhow!("Argon2 error: {}", e))?;
 
     Ok(combined_hash)
 }
@@ -147,21 +148,21 @@ pub fn combine_password_and_keyfile(
 /// 如果文件有效则返回 `Ok(())`，否则返回错误。
 pub fn validate_keyfile<P: AsRef<Path>>(path: P) -> Result<()> {
     let path = path.as_ref();
-    
+
     // 检查文件是否存在
     if !path.exists() {
         bail!("密钥文件不存在: {}", path.display());
     }
-    
+
     // 检查路径是否指向一个文件而不是目录
     if !path.is_file() {
         bail!("密钥文件路径不是一个文件: {}", path.display());
     }
-    
+
     // 获取文件元数据以检查大小
     let metadata = fs::metadata(path)
         .with_context(|| format!("无法读取密钥文件元数据: {}", path.display()))?;
-    
+
     let file_size = metadata.len();
     if file_size < MIN_KEYFILE_SIZE as u64 || file_size > MAX_KEYFILE_SIZE as u64 {
         bail!(
@@ -171,7 +172,7 @@ pub fn validate_keyfile<P: AsRef<Path>>(path: P) -> Result<()> {
             MAX_KEYFILE_SIZE
         );
     }
-    
+
     Ok(())
 }
 

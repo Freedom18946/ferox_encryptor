@@ -7,8 +7,7 @@
 
 use crate::{
     constants::{
-        AES_KEY_LEN, BUFFER_LEN, CUSTOM_FILE_EXTENSION, IV_LEN, MASTER_KEY_LEN, SALT_LEN,
-        TAG_LEN,
+        AES_KEY_LEN, BUFFER_LEN, CUSTOM_FILE_EXTENSION, IV_LEN, MASTER_KEY_LEN, SALT_LEN, TAG_LEN,
     },
     keyfile::{combine_password_and_keyfile, KeyFile},
 };
@@ -92,7 +91,10 @@ pub fn run_decryption_flow(
 
         // 防止意外覆盖现有文件
         if target_path.exists() {
-            bail!("目标文件 {} 已存在，为防止数据覆盖，操作已中止。", target_path.display());
+            bail!(
+                "目标文件 {} 已存在，为防止数据覆盖，操作已中止。",
+                target_path.display()
+            );
         }
         log::info!("解密后的文件将保存为: {}", target_path.display());
 
@@ -127,8 +129,8 @@ pub fn run_decryption_flow(
         // 使用从文件头读取的参数重新构建 Argon2 配置
         let argon2_params = Params::new(m_cost, t_cost, p_cost, Some(MASTER_KEY_LEN))
             .map_err(|e| anyhow!("从文件头创建 Argon2 参数失败: {}", e))?;
-        
-        log::info!("文件使用的 Argon2 参数: m_cost={}, t_cost={}, p_cost={}", m_cost, t_cost, p_cost);
+
+        log::info!("文件使用的 Argon2 参数: m_cost={m_cost}, t_cost={t_cost}, p_cost={p_cost}");
 
         // --- 5. 密钥派生 ---
         log::info!("正在从密码派生密钥...");
@@ -151,15 +153,14 @@ pub fn run_decryption_flow(
         argon2
             .hash_password_into(&password_material, &salt, &mut master_key)
             .map_err(|e| anyhow!("Argon2密钥派生失败: {}", e))?;
-        
+
         password_material.zeroize();
         log::info!("密钥派生完成。");
 
         // --- 6. 初始化加密器和 MAC ---
         let (aes_key, hmac_key) = master_key.split_at(AES_KEY_LEN);
         let mut cipher = Aes256Ctr::new(aes_key.into(), &iv.into());
-        let mut mac =
-            HmacSha256::new_from_slice(hmac_key).context("无法创建HMAC实例")?;
+        let mut mac = HmacSha256::new_from_slice(hmac_key).context("无法创建HMAC实例")?;
 
         // --- 7. 计算密文大小并准备流式解密 ---
         let header_size = (2 + filename_len + SALT_LEN + IV_LEN + 12) as u64; // +12 for Argon2 params
@@ -187,7 +188,7 @@ pub fn run_decryption_flow(
             }
             pb.inc(bytes_read as u64);
             let chunk = &mut buffer[..bytes_read];
-            
+
             // MAC-then-Decrypt 模式的逆过程:
             // 1. 将从文件读取的密文块送入 HMAC 进行认证
             mac.update(chunk);

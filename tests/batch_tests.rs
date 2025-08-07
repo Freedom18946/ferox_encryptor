@@ -35,7 +35,11 @@ fn test_batch_encrypt_decrypt_basic() -> Result<()> {
     // Verify encrypted files exist
     for (filename, _) in &files {
         let encrypted_path = temp_dir.path().join(format!("{}.feroxcrypt", filename));
-        assert!(encrypted_path.exists(), "Encrypted file should exist: {}", filename);
+        assert!(
+            encrypted_path.exists(),
+            "Encrypted file should exist: {}",
+            filename
+        );
     }
 
     // Remove original files
@@ -52,7 +56,11 @@ fn test_batch_encrypt_decrypt_basic() -> Result<()> {
     // Verify original files are restored with correct content
     for (filename, expected_content) in &files {
         let file_path = temp_dir.path().join(filename);
-        assert!(file_path.exists(), "Decrypted file should exist: {}", filename);
+        assert!(
+            file_path.exists(),
+            "Decrypted file should exist: {}",
+            filename
+        );
         let actual_content = fs::read_to_string(&file_path)?;
         assert_eq!(&actual_content, expected_content);
     }
@@ -89,7 +97,8 @@ fn test_batch_with_subdirectories() -> Result<()> {
         ..Default::default()
     };
 
-    let encrypt_result = batch_encrypt_directory(temp_dir.path(), password, None, &recursive_config)?;
+    let encrypt_result =
+        batch_encrypt_directory(temp_dir.path(), password, None, &recursive_config)?;
     assert_eq!(encrypt_result.success_count, 3);
     assert_eq!(encrypt_result.failure_count, 0);
 
@@ -100,7 +109,8 @@ fn test_batch_with_subdirectories() -> Result<()> {
     }
 
     // Test recursive decryption
-    let decrypt_result = batch_decrypt_directory(temp_dir.path(), password, None, &recursive_config)?;
+    let decrypt_result =
+        batch_decrypt_directory(temp_dir.path(), password, None, &recursive_config)?;
     assert_eq!(decrypt_result.success_count, 3);
     assert_eq!(decrypt_result.failure_count, 0);
 
@@ -236,7 +246,10 @@ fn test_batch_different_security_levels() -> Result<()> {
 
         // Create test file for this level
         let test_file = level_dir.join("test.txt");
-        fs::write(&test_file, format!("Content for {:?} level", level).as_bytes())?;
+        fs::write(
+            &test_file,
+            format!("Content for {:?} level", level).as_bytes(),
+        )?;
 
         let config = BatchConfig {
             level,
@@ -273,7 +286,10 @@ fn test_batch_error_handling() -> Result<()> {
     fs::write(temp_dir.path().join("valid2.txt"), b"Valid content 2")?;
 
     // Create a file that's already encrypted (should be skipped)
-    fs::write(temp_dir.path().join("already.txt.feroxcrypt"), b"Fake encrypted content")?;
+    fs::write(
+        temp_dir.path().join("already.txt.feroxcrypt"),
+        b"Fake encrypted content",
+    )?;
 
     let config = BatchConfig::default();
 

@@ -29,7 +29,8 @@ fn test_encryption_decryption_roundtrip() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test.txt.feroxcrypt");
@@ -69,7 +70,8 @@ fn test_different_security_levels() -> Result<()> {
             false,
             password,
             level,
-            None, Arc::clone(&temp_file_path),
+            None,
+            Arc::clone(&temp_file_path),
         )?;
 
         let encrypted_file = temp_dir.path().join(format!("{}.feroxcrypt", filename));
@@ -112,7 +114,8 @@ fn test_large_file_encryption() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("large_test.bin.feroxcrypt");
@@ -149,7 +152,8 @@ fn test_unicode_filename() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir

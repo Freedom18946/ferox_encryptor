@@ -5,12 +5,7 @@
 //! 该模块提供了对多个文件进行加密或解密的功能。
 //! 它支持目录的递归遍历、按模式包含/排除文件，并能报告详细的处理结果。
 
-use crate::{
-    decrypt::run_decryption_flow,
-    encrypt::run_encryption_flow,
-    keyfile::KeyFile,
-    Level,
-};
+use crate::{decrypt::run_decryption_flow, encrypt::run_encryption_flow, keyfile::KeyFile, Level};
 use anyhow::Result;
 use glob::Pattern;
 use std::fs;
@@ -123,13 +118,19 @@ pub fn batch_encrypt_files(
         );
 
         // 对每个文件调用单独的加密处理函数
-        match process_single_encryption(file_path, password, keyfile, config, Arc::clone(&temp_file_path)) {
+        match process_single_encryption(
+            file_path,
+            password,
+            keyfile,
+            config,
+            Arc::clone(&temp_file_path),
+        ) {
             Ok(file_size) => {
                 result.add_success(file_size);
                 log::info!("✅ 成功加密: {}", file_path.display());
             }
             Err(e) => {
-                let error_msg = format!("{:#}", e);
+                let error_msg = format!("{e:#}");
                 result.add_failure(file_path.clone(), error_msg.clone());
                 log::error!("❌ 加密失败 {}: {}", file_path.display(), error_msg);
             }
@@ -184,7 +185,7 @@ pub fn batch_decrypt_files(
                 log::info!("✅ 成功解密: {}", file_path.display());
             }
             Err(e) => {
-                let error_msg = format!("{:#}", e);
+                let error_msg = format!("{e:#}");
                 result.add_failure(file_path.clone(), error_msg.clone());
                 log::error!("❌ 解密失败 {}: {}", file_path.display(), error_msg);
             }
@@ -209,7 +210,7 @@ fn process_single_encryption(
     temp_file_path: Arc<Mutex<Option<PathBuf>>>,
 ) -> Result<u64> {
     let file_size = fs::metadata(file_path)?.len();
-    
+
     run_encryption_flow(
         file_path,
         config.force_overwrite,
@@ -218,7 +219,7 @@ fn process_single_encryption(
         keyfile,
         temp_file_path,
     )?;
-    
+
     Ok(file_size)
 }
 
@@ -230,9 +231,9 @@ fn process_single_decryption(
     temp_file_path: Arc<Mutex<Option<PathBuf>>>,
 ) -> Result<u64> {
     let file_size = fs::metadata(file_path)?.len();
-    
+
     run_decryption_flow(file_path, password, keyfile, temp_file_path)?;
-    
+
     Ok(file_size)
 }
 
@@ -275,7 +276,7 @@ fn should_include_file(path: &Path, config: &BatchConfig, encrypted_only: bool) 
     // 根据 `encrypted_only` 标志，判断文件是否具有正确的加密状态
     let is_encrypted = path
         .extension()
-        .map_or(false, |ext| ext == crate::constants::CUSTOM_FILE_EXTENSION);
+        .is_some_and(|ext| ext == crate::constants::CUSTOM_FILE_EXTENSION);
 
     if encrypted_only && !is_encrypted {
         return false; // 需要已加密文件，但当前文件未加密

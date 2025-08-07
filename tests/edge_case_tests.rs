@@ -12,7 +12,7 @@ use tempfile::TempDir;
 #[test]
 fn test_maximum_filename_length() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Test filename at a more reasonable limit for most filesystems (e.g., 250 chars)
     let max_name = "a".repeat(250) + ".txt";
     let max_file = temp_dir.path().join(&max_name);
@@ -26,7 +26,8 @@ fn test_maximum_filename_length() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     );
 
     // This should fail gracefully if the OS filesystem has a shorter limit.
@@ -35,7 +36,9 @@ fn test_maximum_filename_length() -> Result<()> {
         let error_msg = e.to_string();
         // We expect an error related to file creation or the OS limit
         assert!(
-            error_msg.contains("无法创建目标文件") || error_msg.contains("Could not create target file") || error_msg.contains("File name too long"),
+            error_msg.contains("无法创建目标文件")
+                || error_msg.contains("Could not create target file")
+                || error_msg.contains("File name too long"),
             "Unexpected error message: {}",
             error_msg
         );
@@ -47,11 +50,11 @@ fn test_maximum_filename_length() -> Result<()> {
 #[test]
 fn test_filename_too_long() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Test filename exceeding the limit
     let too_long_name = "a".repeat(70000) + ".txt";
     let _too_long_file = temp_dir.path().join(&too_long_name);
-    
+
     // This might fail at filesystem level, so we'll create a shorter file
     // and simulate the error condition
     let test_file = temp_dir.path().join("test.txt");
@@ -79,7 +82,8 @@ fn test_zero_byte_file() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("zero.bin.feroxcrypt");
@@ -87,7 +91,10 @@ fn test_zero_byte_file() -> Result<()> {
 
     // Verify encrypted file has headers even for zero content
     let encrypted_size = fs::metadata(&encrypted_file)?.len();
-    assert!(encrypted_size > 0, "Encrypted file should have headers even for zero content");
+    assert!(
+        encrypted_size > 0,
+        "Encrypted file should have headers even for zero content"
+    );
 
     // Decrypt
     fs::remove_file(&zero_file)?;
@@ -115,7 +122,8 @@ fn test_single_byte_file() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("single.bin.feroxcrypt");
@@ -141,8 +149,14 @@ fn test_binary_data_patterns() -> Result<()> {
     let patterns = vec![
         (vec![0x00; 1000], "all_zeros"),
         (vec![0xFF; 1000], "all_ones"),
-        ((0..=255).cycle().take(1000).collect::<Vec<u8>>(), "sequential"),
-        ((0..1000).map(|i| (i % 256) as u8).collect(), "modulo_pattern"),
+        (
+            (0..=255).cycle().take(1000).collect::<Vec<u8>>(),
+            "sequential",
+        ),
+        (
+            (0..1000).map(|i| (i % 256) as u8).collect(),
+            "modulo_pattern",
+        ),
     ];
 
     for (pattern, name) in patterns {
@@ -157,7 +171,8 @@ fn test_binary_data_patterns() -> Result<()> {
             false,
             password,
             Level::Interactive,
-            None, Arc::clone(&temp_file_path),
+            None,
+            Arc::clone(&temp_file_path),
         )?;
 
         let encrypted_file = temp_dir.path().join(format!("{}.bin.feroxcrypt", name));
@@ -195,7 +210,8 @@ fn test_file_with_no_extension() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("no_extension_file.feroxcrypt");
@@ -227,7 +243,8 @@ fn test_file_with_multiple_dots() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("file.with.many.dots.txt.feroxcrypt");
@@ -259,7 +276,8 @@ fn test_already_encrypted_file_detection() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test.txt.feroxcrypt");
@@ -271,12 +289,20 @@ fn test_already_encrypted_file_detection() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     );
 
-    assert!(result.is_err(), "Should not allow encrypting already encrypted files");
+    assert!(
+        result.is_err(),
+        "Should not allow encrypting already encrypted files"
+    );
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("already encrypted") || error_msg.contains("已加密") || error_msg.contains("feroxcrypt"));
+    assert!(
+        error_msg.contains("already encrypted")
+            || error_msg.contains("已加密")
+            || error_msg.contains("feroxcrypt")
+    );
 
     Ok(())
 }
@@ -296,7 +322,8 @@ fn test_overwrite_protection() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test.txt.feroxcrypt");
@@ -308,11 +335,16 @@ fn test_overwrite_protection() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     );
     assert!(result.is_err(), "Should fail without --force");
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("already exists") || error_msg.contains("已存在") || error_msg.contains("exists"));
+    assert!(
+        error_msg.contains("already exists")
+            || error_msg.contains("已存在")
+            || error_msg.contains("exists")
+    );
 
     // Encrypt again with --force - should succeed
     let result_force = run_encryption_flow(
@@ -320,7 +352,8 @@ fn test_overwrite_protection() -> Result<()> {
         true, // force overwrite
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     );
     assert!(result_force.is_ok(), "Should succeed with --force");
 
@@ -338,19 +371,22 @@ fn test_non_feroxcrypt_file_decryption() -> Result<()> {
 
     // Attempt to decrypt a regular file - should fail
     let result = run_decryption_flow(&regular_file, password, None, Arc::clone(&temp_file_path));
-    assert!(result.is_err(), "Should not allow decrypting non-encrypted files");
-    
+    assert!(
+        result.is_err(),
+        "Should not allow decrypting non-encrypted files"
+    );
+
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("does not appear to be encrypted") || 
-        error_msg.contains("不是加密文件") || 
-        error_msg.contains("not encrypted") ||
-        error_msg.contains("无法读取加密文件头") ||
-        error_msg.contains("Cannot read encrypted file header") ||
-        error_msg.contains("文件格式错误") ||
-        error_msg.contains("Invalid file format") ||
-        error_msg.contains("文件看起来不是一个有效的加密文件") ||
-        error_msg.contains("feroxcrypt"),
+        error_msg.contains("does not appear to be encrypted")
+            || error_msg.contains("不是加密文件")
+            || error_msg.contains("not encrypted")
+            || error_msg.contains("无法读取加密文件头")
+            || error_msg.contains("Cannot read encrypted file header")
+            || error_msg.contains("文件格式错误")
+            || error_msg.contains("Invalid file format")
+            || error_msg.contains("文件看起来不是一个有效的加密文件")
+            || error_msg.contains("feroxcrypt"),
         "Unexpected error message: {}",
         error_msg
     );
@@ -374,7 +410,8 @@ fn test_decryption_with_wrong_password() -> Result<()> {
         false,
         correct_password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test_wrong_pass.txt.feroxcrypt");
@@ -384,12 +421,24 @@ fn test_decryption_with_wrong_password() -> Result<()> {
     fs::remove_file(&test_file)?;
 
     // Attempt to decrypt with the wrong password
-    let result = run_decryption_flow(&encrypted_file, wrong_password, None, Arc::clone(&temp_file_path));
+    let result = run_decryption_flow(
+        &encrypted_file,
+        wrong_password,
+        None,
+        Arc::clone(&temp_file_path),
+    );
 
-    assert!(result.is_err(), "Decryption should fail with the wrong password");
+    assert!(
+        result.is_err(),
+        "Decryption should fail with the wrong password"
+    );
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("Authentication failed") || error_msg.contains("认证失败") || error_msg.contains("验证失败") || error_msg.contains("HMAC") || error_msg.contains("密码错误"),
+        error_msg.contains("Authentication failed")
+            || error_msg.contains("认证失败")
+            || error_msg.contains("验证失败")
+            || error_msg.contains("HMAC")
+            || error_msg.contains("密码错误"),
         "Error message should indicate authentication failure: {}",
         error_msg
     );
@@ -412,12 +461,13 @@ fn test_decryption_with_tampered_hmac() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test_tampered_hmac.txt.feroxcrypt");
     let mut encrypted_data = fs::read(&encrypted_file)?;
-    
+
     // Tamper with the HMAC tag (last 32 bytes)
     let data_len = encrypted_data.len();
     encrypted_data[data_len - 5] ^= 0xFF; // Flip some bits in the tag
@@ -429,10 +479,17 @@ fn test_decryption_with_tampered_hmac() -> Result<()> {
     // Attempt to decrypt the tampered file
     let result = run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path));
 
-    assert!(result.is_err(), "Decryption should fail with a tampered HMAC");
+    assert!(
+        result.is_err(),
+        "Decryption should fail with a tampered HMAC"
+    );
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("Authentication failed") || error_msg.contains("认证失败") || error_msg.contains("验证失败") || error_msg.contains("HMAC") || error_msg.contains("密码错误"),
+        error_msg.contains("Authentication failed")
+            || error_msg.contains("认证失败")
+            || error_msg.contains("验证失败")
+            || error_msg.contains("HMAC")
+            || error_msg.contains("密码错误"),
         "Error message should indicate authentication failure: {}",
         error_msg
     );
@@ -455,12 +512,15 @@ fn test_decryption_with_tampered_ciphertext() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
-    let encrypted_file = temp_dir.path().join("test_tampered_ciphertext.txt.feroxcrypt");
+    let encrypted_file = temp_dir
+        .path()
+        .join("test_tampered_ciphertext.txt.feroxcrypt");
     let mut encrypted_data = fs::read(&encrypted_file)?;
-    
+
     // Tamper with the ciphertext (somewhere in the middle, after the header)
     encrypted_data[100] ^= 0xFF; // Flip a bit
     fs::write(&encrypted_file, &encrypted_data)?;
@@ -471,10 +531,17 @@ fn test_decryption_with_tampered_ciphertext() -> Result<()> {
     // Attempt to decrypt the tampered file
     let result = run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path));
 
-    assert!(result.is_err(), "Decryption should fail with tampered ciphertext");
+    assert!(
+        result.is_err(),
+        "Decryption should fail with tampered ciphertext"
+    );
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("Authentication failed") || error_msg.contains("认证失败") || error_msg.contains("验证失败") || error_msg.contains("HMAC") || error_msg.contains("密码错误"),
+        error_msg.contains("Authentication failed")
+            || error_msg.contains("认证失败")
+            || error_msg.contains("验证失败")
+            || error_msg.contains("HMAC")
+            || error_msg.contains("密码错误"),
         "Error message should indicate authentication failure: {}",
         error_msg
     );
@@ -493,12 +560,17 @@ fn test_encrypt_non_existent_file() -> Result<()> {
         false,
         "password",
         Level::Interactive,
-        None, temp_file_path,
+        None,
+        temp_file_path,
     );
 
     assert!(result.is_err());
     let error_msg = result.unwrap_err().to_string();
-    assert!(error_msg.contains("File does not exist") || error_msg.contains("文件不存在") || error_msg.contains("No such file"));
+    assert!(
+        error_msg.contains("File does not exist")
+            || error_msg.contains("文件不存在")
+            || error_msg.contains("No such file")
+    );
 
     Ok(())
 }
@@ -513,18 +585,19 @@ fn test_encrypt_directory_as_input() -> Result<()> {
         false,
         "password",
         Level::Interactive,
-        None, temp_file_path,
+        None,
+        temp_file_path,
     );
 
     assert!(result.is_err());
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("Path is not a file") || 
-        error_msg.contains("不是文件") || 
-        error_msg.contains("is a directory") ||
-        error_msg.contains("无法读取输入文件") ||
-        error_msg.contains("Cannot read input file") ||
-        error_msg.contains("提供的路径不是一个文件"),
+        error_msg.contains("Path is not a file")
+            || error_msg.contains("不是文件")
+            || error_msg.contains("is a directory")
+            || error_msg.contains("无法读取输入文件")
+            || error_msg.contains("Cannot read input file")
+            || error_msg.contains("提供的路径不是一个文件"),
         "Unexpected error message: {}",
         error_msg
     );

@@ -1,35 +1,47 @@
-# Ferox Encryptor API Documentation
+# Ferox Encryptor API 文档 (API Documentation)
 
-## Overview
+**Ferox Encryptor 库的完整 API 参考文档**
 
-Ferox Encryptor provides a simple yet powerful API for encrypting and decrypting files with strong security guarantees.
+*Comprehensive API reference documentation for the Ferox Encryptor library*
 
-## Core Functions
+## 概览 (Overview)
 
-### `run_encryption_flow`
+Ferox Encryptor 提供了一个简单而强大的 API，用于加密和解密文件，并提供强大的安全保证。
 
-Encrypts a file with the specified security level and password.
+*Ferox Encryptor provides a simple yet powerful API for encrypting and decrypting files with strong security guarantees.*
+
+## 核心函数 (Core Functions)
+
+### `run_encryption_flow` - 文件加密函数
+
+使用指定的安全级别和密码加密文件。
+
+*Encrypts a file with the specified security level and password.*
 
 ```rust
 pub fn run_encryption_flow(
-    source_path: &Path,
-    force_overwrite: bool,
-    password: &str,
-    level: Level,
-    temp_file_path: Arc<Mutex<Option<PathBuf>>>,
+    source_path: &Path,           // 源文件路径 (Source file path)
+    force_overwrite: bool,        // 是否强制覆盖 (Force overwrite flag)
+    password: &str,               // 加密密码 (Encryption password)
+    level: Level,                 // 安全级别 (Security level)
+    keyfile: Option<&KeyFile>,    // 可选密钥文件 (Optional keyfile)
+    temp_file_path: Arc<Mutex<Option<PathBuf>>>, // 临时文件路径 (Temp file path)
 ) -> Result<()>
 ```
 
-**Parameters:**
-- `source_path`: Path to the file to encrypt
-- `force_overwrite`: Whether to overwrite existing encrypted files
-- `password`: Password for encryption
-- `level`: Security level (Interactive, Moderate, or Paranoid)
-- `temp_file_path`: Shared state for cleanup on interruption
+**参数说明 (Parameters):**
+- `source_path`: 要加密的文件路径 (Path to the file to encrypt)
+- `force_overwrite`: 是否覆盖已存在的加密文件 (Whether to overwrite existing encrypted files)
+- `password`: 用于加密的密码 (Password for encryption)
+- `level`: 安全级别 (Interactive, Moderate, 或 Paranoid) (Security level: Interactive, Moderate, or Paranoid)
+- `keyfile`: 可选的密钥文件，用于增强安全性 (Optional keyfile for enhanced security)
+- `temp_file_path`: 用于中断时清理的共享状态 (Shared state for cleanup on interruption)
 
-**Returns:** `Ok(())` on success, or an error describing what went wrong.
+**返回值 (Returns):** 成功时返回 `Ok(())`，失败时返回描述错误的信息。
+*Returns `Ok(())` on success, or an error describing what went wrong.*
 
-**Output:** Creates a new file with `.feroxcrypt` extension containing the encrypted data.
+**输出 (Output):** 创建一个带有 `.feroxcrypt` 扩展名的新文件，包含加密数据。
+*Creates a new file with `.feroxcrypt` extension containing the encrypted data.*
 
 ### `run_decryption_flow`
 

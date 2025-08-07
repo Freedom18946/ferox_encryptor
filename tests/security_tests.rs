@@ -26,7 +26,8 @@ fn test_wrong_password_fails() -> Result<()> {
         false,
         correct_password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("secret.txt.feroxcrypt");
@@ -39,20 +40,24 @@ fn test_wrong_password_fails() -> Result<()> {
     let decrypt_result = run_decryption_flow(
         &encrypted_file,
         wrong_password,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     );
 
-    assert!(decrypt_result.is_err(), "Decryption with wrong password should fail");
-    
+    assert!(
+        decrypt_result.is_err(),
+        "Decryption with wrong password should fail"
+    );
+
     // Verify the error is authentication-related
     let error_msg = format!("{}", decrypt_result.unwrap_err());
     assert!(
-        error_msg.contains("Authentication failed") ||
-        error_msg.contains("CRITICAL ERROR") ||
-        error_msg.contains("认证失败") ||
-        error_msg.contains("验证失败") ||
-        error_msg.contains("HMAC") ||
-        error_msg.contains("密码错误"),
+        error_msg.contains("Authentication failed")
+            || error_msg.contains("CRITICAL ERROR")
+            || error_msg.contains("认证失败")
+            || error_msg.contains("验证失败")
+            || error_msg.contains("HMAC")
+            || error_msg.contains("密码错误"),
         "Unexpected error message: {}",
         error_msg
     );
@@ -81,11 +86,12 @@ fn test_corrupted_file_detection() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("test.txt.feroxcrypt");
-    
+
     // Corrupt the encrypted file by modifying some bytes
     let mut encrypted_data = fs::read(&encrypted_file)?;
     let corruption_pos = encrypted_data.len() / 2;
@@ -96,23 +102,23 @@ fn test_corrupted_file_detection() -> Result<()> {
     fs::remove_file(&test_file)?;
 
     // Try to decrypt corrupted file - should fail
-    let decrypt_result = run_decryption_flow(
-        &encrypted_file,
-        password,
-        None, Arc::clone(&temp_file_path),
+    let decrypt_result =
+        run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path));
+
+    assert!(
+        decrypt_result.is_err(),
+        "Decryption of corrupted file should fail"
     );
 
-    assert!(decrypt_result.is_err(), "Decryption of corrupted file should fail");
-    
     // Verify the error is authentication-related
     let error_msg = format!("{}", decrypt_result.unwrap_err());
     assert!(
-        error_msg.contains("Authentication failed") ||
-        error_msg.contains("CRITICAL ERROR") ||
-        error_msg.contains("认证失败") ||
-        error_msg.contains("验证失败") ||
-        error_msg.contains("HMAC") ||
-        error_msg.contains("密码错误"),
+        error_msg.contains("Authentication failed")
+            || error_msg.contains("CRITICAL ERROR")
+            || error_msg.contains("认证失败")
+            || error_msg.contains("验证失败")
+            || error_msg.contains("HMAC")
+            || error_msg.contains("密码错误"),
         "Unexpected error message: {}",
         error_msg
     );
@@ -138,10 +144,13 @@ fn test_different_security_levels_compatibility() -> Result<()> {
             false,
             password,
             level,
-            None, Arc::clone(&temp_file_path),
+            None,
+            Arc::clone(&temp_file_path),
         )?;
 
-        let encrypted_file = temp_dir.path().join(format!("test_{:?}.txt.feroxcrypt", level));
+        let encrypted_file = temp_dir
+            .path()
+            .join(format!("test_{:?}.txt.feroxcrypt", level));
         assert!(encrypted_file.exists());
 
         // Remove original and decrypt
@@ -171,7 +180,8 @@ fn test_empty_file_encryption() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("empty.txt.feroxcrypt");
@@ -179,14 +189,20 @@ fn test_empty_file_encryption() -> Result<()> {
 
     // Verify encrypted file is larger than 0 (due to headers and MAC)
     let encrypted_size = fs::metadata(&encrypted_file)?.len();
-    assert!(encrypted_size > 0, "Encrypted empty file should have headers and MAC");
+    assert!(
+        encrypted_size > 0,
+        "Encrypted empty file should have headers and MAC"
+    );
 
     // Decrypt and verify
     fs::remove_file(&test_file)?;
     run_decryption_flow(&encrypted_file, password, None, temp_file_path)?;
 
     let decrypted_content = fs::read(&test_file)?;
-    assert_eq!(decrypted_content, b"", "Decrypted empty file should be empty");
+    assert_eq!(
+        decrypted_content, b"",
+        "Decrypted empty file should be empty"
+    );
 
     Ok(())
 }
@@ -194,7 +210,7 @@ fn test_empty_file_encryption() -> Result<()> {
 #[test]
 fn test_very_long_filename() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Create a file with a very long name (but within limits)
     let long_name = "a".repeat(200) + ".txt";
     let test_file = temp_dir.path().join(&long_name);
@@ -209,7 +225,8 @@ fn test_very_long_filename() -> Result<()> {
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join(format!("{}.feroxcrypt", long_name));
@@ -229,7 +246,7 @@ fn test_very_long_filename() -> Result<()> {
 #[test]
 fn test_special_characters_in_filename() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Test various special characters that are valid in filenames
     let special_names = vec![
         "file with spaces.txt",
@@ -254,17 +271,26 @@ fn test_special_characters_in_filename() -> Result<()> {
             false,
             password,
             Level::Interactive,
-            None, Arc::clone(&temp_file_path),
+            None,
+            Arc::clone(&temp_file_path),
         )?;
 
         let encrypted_file = temp_dir.path().join(format!("{}.feroxcrypt", name));
-        assert!(encrypted_file.exists(), "Encrypted file should exist for {}", name);
+        assert!(
+            encrypted_file.exists(),
+            "Encrypted file should exist for {}",
+            name
+        );
 
         // Decrypt
         fs::remove_file(&test_file)?;
         run_decryption_flow(&encrypted_file, password, None, temp_file_path)?;
 
-        assert!(test_file.exists(), "Decrypted file should exist for {}", name);
+        assert!(
+            test_file.exists(),
+            "Decrypted file should exist for {}",
+            name
+        );
         let decrypted_content = fs::read_to_string(&test_file)?;
         assert_eq!(decrypted_content, format!("Content for {}", name));
     }
@@ -278,17 +304,20 @@ fn test_concurrent_operations() -> Result<()> {
 
     let temp_dir = TempDir::new()?;
     let password = "concurrent_test_password";
-    
+
     // Create multiple test files
     let mut handles = vec![];
-    
+
     for i in 0..5 {
         let temp_dir_path = temp_dir.path().to_path_buf();
         let password = password.to_string();
-        
+
         let handle = thread::spawn(move || -> Result<()> {
             let test_file = temp_dir_path.join(format!("concurrent_test_{}.txt", i));
-            fs::write(&test_file, format!("Concurrent test content {}", i).as_bytes())?;
+            fs::write(
+                &test_file,
+                format!("Concurrent test content {}", i).as_bytes(),
+            )?;
 
             let temp_file_path = Arc::new(Mutex::new(None::<PathBuf>));
 
@@ -298,10 +327,12 @@ fn test_concurrent_operations() -> Result<()> {
                 false,
                 &password,
                 Level::Interactive,
-                None, Arc::clone(&temp_file_path),
+                None,
+                Arc::clone(&temp_file_path),
             )?;
 
-            let encrypted_file = temp_dir_path.join(format!("concurrent_test_{}.txt.feroxcrypt", i));
+            let encrypted_file =
+                temp_dir_path.join(format!("concurrent_test_{}.txt.feroxcrypt", i));
             assert!(encrypted_file.exists());
 
             // Decrypt
@@ -313,7 +344,7 @@ fn test_concurrent_operations() -> Result<()> {
 
             Ok(())
         });
-        
+
         handles.push(handle);
     }
 

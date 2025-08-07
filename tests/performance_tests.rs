@@ -16,7 +16,7 @@ use tempfile::TempDir;
 #[ignore]
 fn test_large_file_performance() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Create a 10MB test file
     let file_size = 10 * 1024 * 1024; // 10MB
     let test_content = vec![0xAB; file_size];
@@ -33,7 +33,8 @@ fn test_large_file_performance() -> Result<()> {
         false,
         password,
         Level::Interactive, // Use fastest level for performance test
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
     let encrypt_duration = encrypt_start.elapsed();
 
@@ -42,8 +43,11 @@ fn test_large_file_performance() -> Result<()> {
 
     // Calculate encryption throughput
     let encrypt_throughput = file_size as f64 / encrypt_duration.as_secs_f64() / (1024.0 * 1024.0);
-    println!("
-[Large File] Encryption throughput (Interactive): {:.2} MB/s", encrypt_throughput);
+    println!(
+        "
+[Large File] Encryption throughput (Interactive): {:.2} MB/s",
+        encrypt_throughput
+    );
 
     // Test decryption performance
     fs::remove_file(&test_file)?;
@@ -53,15 +57,24 @@ fn test_large_file_performance() -> Result<()> {
 
     // Calculate decryption throughput
     let decrypt_throughput = file_size as f64 / decrypt_duration.as_secs_f64() / (1024.0 * 1024.0);
-    println!("[Large File] Decryption throughput (Interactive): {:.2} MB/s", decrypt_throughput);
+    println!(
+        "[Large File] Decryption throughput (Interactive): {:.2} MB/s",
+        decrypt_throughput
+    );
 
     // Verify content integrity
     let decrypted_content = fs::read(&test_file)?;
     assert_eq!(decrypted_content, test_content);
 
     // Performance assertions (these are quite lenient to account for different systems)
-    assert!(encrypt_throughput > 1.0, "Encryption should be faster than 1 MB/s");
-    assert!(decrypt_throughput > 1.0, "Decryption should be faster than 1 MB/s");
+    assert!(
+        encrypt_throughput > 1.0,
+        "Encryption should be faster than 1 MB/s"
+    );
+    assert!(
+        decrypt_throughput > 1.0,
+        "Decryption should be faster than 1 MB/s"
+    );
 
     Ok(())
 }
@@ -70,7 +83,7 @@ fn test_large_file_performance() -> Result<()> {
 #[ignore]
 fn test_security_level_performance_comparison() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Create a larger test file for this comparison (5MB) to better show differences
     let file_size = 5 * 1024 * 1024; // 5MB
     let test_content = vec![0xCD; file_size];
@@ -79,8 +92,11 @@ fn test_security_level_performance_comparison() -> Result<()> {
     let levels = [Level::Interactive, Level::Moderate, Level::Paranoid];
     let mut results = Vec::new();
 
-    println!("
-[Security Level Comparison] Testing with a {}MB file...", file_size / (1024 * 1024));
+    println!(
+        "
+[Security Level Comparison] Testing with a {}MB file...",
+        file_size / (1024 * 1024)
+    );
 
     for level in levels {
         let test_file = temp_dir.path().join(format!("test_{:?}.bin", level));
@@ -95,12 +111,15 @@ fn test_security_level_performance_comparison() -> Result<()> {
             false,
             password,
             level,
-            None, Arc::clone(&temp_file_path),
+            None,
+            Arc::clone(&temp_file_path),
         )?;
         let encrypt_duration = encrypt_start.elapsed();
 
-        let encrypted_file = temp_dir.path().join(format!("test_{:?}.bin.feroxcrypt", level));
-        
+        let encrypted_file = temp_dir
+            .path()
+            .join(format!("test_{:?}.bin.feroxcrypt", level));
+
         // Measure decryption time
         fs::remove_file(&test_file)?;
         let decrypt_start = Instant::now();
@@ -112,7 +131,7 @@ fn test_security_level_performance_comparison() -> Result<()> {
         assert_eq!(decrypted_content, test_content);
 
         results.push((level, encrypt_duration, decrypt_duration));
-        
+
         println!(
             "Level: {:<12} | Encrypt: {:<8.2}s | Decrypt: {:.2}s",
             format!("{:?}", level),
@@ -139,11 +158,11 @@ fn test_security_level_performance_comparison() -> Result<()> {
 #[ignore]
 fn test_memory_usage_with_large_file() -> Result<()> {
     let temp_dir = TempDir::new()?;
-    
+
     // Create a 50MB test file to test memory efficiency
     let file_size = 50 * 1024 * 1024; // 50MB
     let test_file = temp_dir.path().join("memory_test.bin");
-    
+
     // Create file with pattern to verify integrity
     let mut test_content = Vec::with_capacity(file_size);
     for i in 0..file_size {
@@ -154,15 +173,19 @@ fn test_memory_usage_with_large_file() -> Result<()> {
     let temp_file_path = Arc::new(Mutex::new(None::<PathBuf>));
     let password = "memory_test_password";
 
-    println!("
-[Memory Usage] Processing {}MB file to check for low memory footprint...", file_size / (1024 * 1024));
+    println!(
+        "
+[Memory Usage] Processing {}MB file to check for low memory footprint...",
+        file_size / (1024 * 1024)
+    );
     // Encrypt large file
     run_encryption_flow(
         &test_file,
         false,
         password,
         Level::Interactive,
-        None, Arc::clone(&temp_file_path),
+        None,
+        Arc::clone(&temp_file_path),
     )?;
 
     let encrypted_file = temp_dir.path().join("memory_test.bin.feroxcrypt");
@@ -175,18 +198,20 @@ fn test_memory_usage_with_large_file() -> Result<()> {
     // Verify content integrity
     let decrypted_content = fs::read(&test_file)?;
     assert_eq!(decrypted_content.len(), test_content.len());
-    
+
     // Verify pattern integrity (check every 1000th byte to speed up test)
     for i in (0..decrypted_content.len()).step_by(1000) {
         assert_eq!(
-            decrypted_content[i], 
-            test_content[i],
-            "Content mismatch at position {}", 
+            decrypted_content[i], test_content[i],
+            "Content mismatch at position {}",
             i
         );
     }
 
-    println!("[Memory Usage] Successfully processed {}MB file", file_size / (1024 * 1024));
+    println!(
+        "[Memory Usage] Successfully processed {}MB file",
+        file_size / (1024 * 1024)
+    );
 
     Ok(())
 }
@@ -210,8 +235,11 @@ fn test_many_small_files_performance() -> Result<()> {
 
     let temp_file_path = Arc::new(Mutex::new(None::<PathBuf>));
 
-    println!("
-[Small Files] Processing {} small files (1KB each)...", num_files);
+    println!(
+        "
+[Small Files] Processing {} small files (1KB each)...",
+        num_files
+    );
     // Measure time to encrypt all files
     let encrypt_start = Instant::now();
     for test_file in &test_files {
@@ -220,7 +248,8 @@ fn test_many_small_files_performance() -> Result<()> {
             false,
             password,
             Level::Interactive,
-            None, Arc::clone(&temp_file_path),
+            None,
+            Arc::clone(&temp_file_path),
         )?;
     }
     let encrypt_duration = encrypt_start.elapsed();
@@ -232,7 +261,10 @@ fn test_many_small_files_performance() -> Result<()> {
 
     let decrypt_start = Instant::now();
     for test_file in &test_files {
-        let encrypted_file = temp_dir.path().join(format!("{}.feroxcrypt", test_file.file_name().unwrap().to_str().unwrap()));
+        let encrypted_file = temp_dir.path().join(format!(
+            "{}.feroxcrypt",
+            test_file.file_name().unwrap().to_str().unwrap()
+        ));
         run_decryption_flow(&encrypted_file, password, None, Arc::clone(&temp_file_path))?;
     }
     let decrypt_duration = decrypt_start.elapsed();
@@ -246,14 +278,24 @@ fn test_many_small_files_performance() -> Result<()> {
 
     // Verify all files were processed correctly
     for (i, test_file) in test_files.iter().enumerate() {
-        assert!(test_file.exists(), "File {} should exist after decryption", i);
+        assert!(
+            test_file.exists(),
+            "File {} should exist after decryption",
+            i
+        );
         let content = fs::read_to_string(test_file)?;
-        assert!(content.contains(&format!("Small file content {}", i)));
+        assert!(content.contains(&format!("Small file content {i}")));
     }
 
     // Performance assertion - should handle 100 small files reasonably quickly
-    assert!(encrypt_duration.as_secs() < 60, "Should encrypt 100 small files in under 60 seconds");
-    assert!(decrypt_duration.as_secs() < 60, "Should decrypt 100 small files in under 60 seconds");
+    assert!(
+        encrypt_duration.as_secs() < 60,
+        "Should encrypt 100 small files in under 60 seconds"
+    );
+    assert!(
+        decrypt_duration.as_secs() < 60,
+        "Should decrypt 100 small files in under 60 seconds"
+    );
 
     Ok(())
 }
