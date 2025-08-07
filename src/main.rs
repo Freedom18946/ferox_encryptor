@@ -17,6 +17,7 @@ use ferox_encryptor::{
         batch_decrypt_directory, batch_decrypt_files, batch_encrypt_directory, batch_encrypt_files,
         BatchConfig,
     },
+    interactive::run_interactive_mode,
     keyfile::{validate_keyfile, KeyFile},
     Level,
 };
@@ -45,6 +46,7 @@ use zeroize::Zeroize;
                   • 📁 批量处理和目录加密\n\
                   • 🌍 中英文双语界面\n\n\
                   使用示例:\n\
+                  ferox_encryptor interactive              # 交互式模式\n\
                   ferox_encryptor encrypt secret.txt\n\
                   ferox_encryptor batch-encrypt /important/docs\n\
                   ferox_encryptor generate-key my.key"
@@ -140,6 +142,8 @@ enum Commands {
         #[arg(required = true)]
         output: PathBuf,
     },
+    /// 启动交互式用户界面模式。
+    Interactive,
 }
 
 /// 主函数入口。
@@ -282,6 +286,10 @@ fn main() -> Result<()> {
             keyfile.save_to_file(output)?;
             log::info!("✅ 密钥文件已成功生成: {}", output.display());
             log::warn!("请务必妥善保管此密钥文件，并制作备份。如果丢失，任何使用此密钥文件加密的数据都将永久无法恢复！");
+        }
+        // --- 交互式模式命令 ---
+        Commands::Interactive => {
+            run_interactive_mode()?;
         }
     };
 

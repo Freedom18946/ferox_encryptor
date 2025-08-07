@@ -68,6 +68,7 @@ pub mod batch;
 pub mod constants;
 pub mod decrypt;
 pub mod encrypt;
+pub mod interactive;
 pub mod keyfile;
 
 // 从子模块中重新导出公共类型，方便外部调用者使用。

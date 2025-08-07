@@ -47,6 +47,15 @@ glob = "0.3.1"
 # 目录遍历
 walkdir = "1.0.7"
 
+# 交互式用户界面
+dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
+
+# 控制台颜色和样式
+console = "0.15.8"
+
+# 跨平台路径处理
+dunce = "1.0.4"
+
 [dev-dependencies]
 # 用于在测试中创建临时文件和目录
 tempfile = "3.10.1"
